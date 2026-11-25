@@ -5,14 +5,14 @@ The text between the triple quotes is plain: it can be given to another AI comma
 ```
 claude --permission-mode bypassPermissions """
 Build the <Gitea|Forgejo> site named <name> with its default accounts and the sample repository in this sites folder and test it with webship-js
-# ~/workspace/<dev|test|sandboxes|demos> · https://<name>.ddev.site (or http://127.0.0.1:<port> with --runtime docker) · container-based (DDEV by default)
+# ~/workspace/<dev|test|sandboxes|demos> · https://<name>.ddev.site (or the runtime's own address with --runtime docker, podman or kubernetes) · container-based (DDEV by default)
 # the builder deletes a project of the same name first: stop if <name> is a site somebody still needs
 # check free -g and df -h / first (the image is about 200 MB the first time), build one site at a time
 # nothing on the host: no tool of the site outside the containers; no hosted service, no account anywhere
 # a feature to write or a run to read: the book Automated Functional Testing Recipes first (its README.md, then the matching chapter), from .claude/automated-functional-testing-recipes/ in the project, ~/.claude/automated-functional-testing-recipes/ or https://github.com/webship/webship-js-ai-agent/tree/2.0.x/automated-functional-testing-recipes
 # a pull request of this work: its Checkpoints list last; "Reviewed by a human" and "Code review by maintainers" are never ticked by an agent
 
-1. bash cmd-gitea-project.sh <name> --product <gitea|forgejo> --install --add-users --sample-content <--runtime docker|>
+1. bash cmd-gitea-project.sh <name> --product <gitea|forgejo> --install --add-users --sample-content <--runtime docker|podman|kubernetes|>
    (the product's own image on the project's own PostgreSQL, the workspace account as an administrator, the default accounts and the private repository owner/webship-site)
 2. bash cmd-tools-gitea-cli.sh <name>
    tell me what the site is, its product and release, its address and the accounts it lists

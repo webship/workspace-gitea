@@ -64,12 +64,13 @@ test('every shell script parses; the site\'s script talks to the API with no sec
   assert.doesNotMatch(site, /sys\.argv\[[3-9]\]/, 'nothing but the folder and the verbs on its command line');
 });
 
-test('the runtimes: DDEV and Docker Compose; another is refused before anything is changed', () => {
-  assert.match(read('scripts/args/arg-gitea.sh'), /choices=\['ddev', 'docker'\]/);
+test('the runtimes: DDEV, Docker Compose, Podman and Kubernetes; another is refused before anything is changed', () => {
+  assert.match(read('scripts/args/arg-gitea.sh'), /choices=\['ddev', 'docker', 'podman', 'kubernetes'\]/);
   const build = FUN.slice(FUN.indexOf('function gitea_build()'));
   const guard = build.indexOf('case "${runtime}" in');
   assert.ok(guard > 0 && guard < build.indexOf('drop_database') && guard < build.indexOf('ddev config'), 'the runtime is asked first');
-  assert.ok(build.includes('builds on DDEV and on Docker Compose for now (--runtime ddev or docker), not on ${runtime}: that runtime is not proven for it yet. Nothing was changed.'));
+  assert.match(build, /case "\$\{runtime\}" in\n\s+ddev\|docker\|podman\|kubernetes\) ;;/, 'the four runtimes the plugin was proven on');
+  assert.ok(build.includes('builds on DDEV, Docker Compose, Podman and Kubernetes for now (--runtime ddev, docker, podman or kubernetes), not on ${runtime}: that runtime is not proven for it yet. Nothing was changed.'));
   assert.ok(build.indexOf('gitea_write_env') > build.indexOf('gitea_write_config'), 'the address is known (the port on Docker Compose) before the values are written');
   assert.ok(build.indexOf('gitea_site_admin') > build.indexOf('gitea_wait'), 'the site\'s own administrator once the forge answers');
   const write = FUN.slice(FUN.indexOf('function gitea_write_config()'), FUN.indexOf('function gitea_write_env()'));
@@ -79,7 +80,7 @@ test('the runtimes: DDEV and Docker Compose; another is refused before anything 
   assert.match(env, /umask 077/, 'the site\'s own values are readable by their owner only');
   assert.match(env, /\[ "\$\{product\}" = 'forgejo' \] && prefix='FORGEJO'/, 'Forgejo reads FORGEJO__ values, Gitea GITEA__');
   assert.match(FUN, /forgejo\) echo "codeberg\.org\/forgejo\/forgejo:\$2" ;;/);
-  assert.match(FUN, /\*\) echo "gitea\/gitea:\$2" ;;/);
+  assert.match(FUN, /\*\) echo "docker\.io\/gitea\/gitea:\$2" ;;/, 'with its registry: Podman resolves no short name without asking');
   const serve = read('scripts/gitea-serve.sh');
   assert.match(serve, /RUN_USER = \$\(id -un\)/, 'on Docker Compose the forge runs as the host user');
   assert.match(serve, /exec gitea web --config "\$\{ini\}"/);

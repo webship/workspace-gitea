@@ -4,7 +4,7 @@
  *
  * What the package carries is placed by the installer from the manifest: the builder and the tool in the sites folders,
  * their functions and argparse under core/scripts/plugins/gitea/ (with the compose file of the forge's service, the
- * script that talks to a site's API, the start of a site on Docker Compose and the first feature of a site), and its AI
+ * script that talks to a site's API, the start of a site on Docker Compose, Podman and Kubernetes and the first feature of a site), and its AI
  * items (ai/ in this package) in the folder of their kind.
  *
  * What register() adds, for a project whose git remote is on your own Gitea or Forgejo (the address of the plugin's
@@ -51,7 +51,7 @@ export function assistantContext(): string {
   return [
     'Gitea and Forgejo (one plugin, @webship.co/workspace-gitea; Forgejo is the fork of Gitea that keeps its API), the self-hosted Git forges: a site is built with',
     '`bash cmd-gitea-project.sh <name> --install --add-users --sample-content` from a sites folder (dev, test, sandboxes, demos), Gitea by default or Forgejo with `--product forgejo`:',
-    'the product\'s own image (Gitea 1.27.3, Forgejo 17.0.2 by default, `--release`) on the project\'s own PostgreSQL, on DDEV at https://<name>.ddev.site, or with `--runtime docker` on Docker Compose at http://127.0.0.1:<port>.',
+    'the product\'s own image (Gitea 1.27.3, Forgejo 17.0.2 by default, `--release`) on the project\'s own PostgreSQL, on DDEV at https://<name>.ddev.site, or with `--runtime docker` or `podman` at http://127.0.0.1:<port>, or with `--runtime kubernetes` on the workspace\'s kind cluster at the node\'s address.',
     'Every build makes the site\'s own administrator (forge-admin, its password in the project\'s gitea/env); `--install` makes the workspace account an administrator; `--add-users` adds the default accounts',
     '(owner: the owner of the private repository owner/webship-site, member and reader: its collaborators with write and read access, stranger: no access), each @example.com;',
     '`--sample-content` adds greeting.sh, three issues (one opened by the reader, from outside), the milestone "Sprint 1" and a comment.',
