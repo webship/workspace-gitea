@@ -11,8 +11,8 @@ parser.add_argument('-p', '--product',
 parser.add_argument('--runtime',
                     dest='RUNTIME',
                     default="_none_",
-                    choices=['ddev', 'docker'],
-                    help='The container runtime to build on: ddev (the default, or container.runtime of settings.yml) or docker (Docker Compose). Gitea and Forgejo are not proven on the other runtimes yet.')
+                    choices=['ddev', 'docker', 'podman', 'kubernetes'],
+                    help='The container runtime to build on: ddev (the default, or container.runtime of settings.yml), docker (Docker Compose), podman or kubernetes (a kind cluster). Lando and Docksal are not proven for Gitea and Forgejo yet.')
 parser.add_argument('-i', '--install',
                     action='store_true',
                     default=False,

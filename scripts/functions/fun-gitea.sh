@@ -9,9 +9,11 @@
 # core's own functions. Everything runs in containers, never on the host:
 #   - DDEV (the default): the product's image is a service of a generic project, on the project's own PostgreSQL (the
 #     db service), at https://<name>.ddev.site; the project's web container keeps the mail catcher.
-#   - Docker Compose (--runtime docker): the product's image is the web container's (rt_stack image), on the project's
-#     PostgreSQL, its server started by the stack (rt_serve) as the host user, at http://127.0.0.1:<port>.
-# Podman, Kubernetes, Lando and Docksal are not proven yet: asked for one, the builder says so and changes nothing.
+#   - Docker Compose, Podman and Kubernetes (--runtime docker, podman, kubernetes): the product's image is the web
+#     container's (rt_stack image), on the project's PostgreSQL, its server started by the stack (rt_serve) as the host
+#     user, its data in the project's gitea/data; at http://127.0.0.1:<port>, or on Kubernetes (kind) at the node's
+#     address and a NodePort, the project's folder mounted from the host.
+# Lando and Docksal are not proven yet: asked for one, the builder says so and changes nothing.
 # The site's accounts and content go through the forge's own REST API (gitea-site.py, on this machine), the same on
 # Gitea and Forgejo.
 #
@@ -119,11 +121,11 @@ function gitea_secret() {
   head -c 96 /dev/urandom | base64 -w0 | tr -dc 'A-Za-z0-9' | head -c "${1:-64}" ;
 }
 
-# The image of a product at a release.
+# The image of a product at a release, with its registry: Podman resolves no short name without asking.
 function gitea_image() {
   case "$1" in
     forgejo) echo "codeberg.org/forgejo/forgejo:$2" ;;
-    *) echo "gitea/gitea:$2" ;;
+    *) echo "docker.io/gitea/gitea:$2" ;;
   esac
 }
 
@@ -133,8 +135,8 @@ function gitea_title() {
 }
 
 # Write the project's files: on DDEV the product's service (.ddev/docker-compose.gitea.yaml), its image in .ddev/.env
-# and the claim (.ddev/config.gitea.yaml); on another runtime the claim, the product's image as the web container's and
-# its start (rt_claim, rt_stack, rt_serve). Then the plugin's scripts.
+# and the claim (.ddev/config.gitea.yaml); on another runtime (Docker Compose, Podman, Kubernetes) the claim, the
+# product's image as the web container's and its start (rt_claim, rt_stack, rt_serve). Then the plugin's scripts.
 function gitea_write_config() {
   local project_path="$1" product="$2" release="$3" runtime="$4" ;
   local from="${WORKSPACE_SCRIPTS}/plugins/gitea" f image ;
@@ -301,8 +303,8 @@ function gitea_build() {
   local runtime ; runtime="$(cd "${WORKSPACE_ROOT}/${doc_name}" && gitea_runtime)" ;
 
   case "${runtime}" in
-    ddev|docker) ;;
-    *) echo "${title} builds on DDEV and on Docker Compose for now (--runtime ddev or docker), not on ${runtime}: that runtime is not proven for it yet. Nothing was changed." ; exit 1 ;;
+    ddev|docker|podman|kubernetes) ;;
+    *) echo "${title} builds on DDEV, Docker Compose, Podman and Kubernetes for now (--runtime ddev, docker, podman or kubernetes), not on ${runtime}: that runtime is not proven for it yet. Nothing was changed." ; exit 1 ;;
   esac
   if [ "${runtime}" != 'ddev' ] && ! declare -f rt_stack > /dev/null ; then
     echo "--runtime ${runtime} needs a Webship Workspace with the container runtimes (webship/workspace#694, #841): update the workspace, or build on DDEV." ;
@@ -346,6 +348,7 @@ function gitea_build() {
     ddev config --project-type=generic --project-name=${PROJECT_NAME} --database=postgres:17 \
       --nodejs-version=$(ddev_nodejs_version) < /dev/null || exit 1 ;
   else
+    # The runtime's own project: Docker Compose, Podman or Kubernetes, through the runtime layer.
     ddev config --project-type=generic --webserver-type=generic --project-name=${PROJECT_NAME} --database=postgres:17 --auto < /dev/null || exit 1 ;
   fi
   gitea_write_config "${project_path}" "${product}" "${release}" "${runtime}" || exit 1 ;

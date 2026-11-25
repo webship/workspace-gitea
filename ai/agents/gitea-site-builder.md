@@ -1,6 +1,6 @@
 ---
 name: gitea-site-builder
-description: Use this agent to build, maintain or remove a Gitea or Forgejo site (the open-source self-hosted Git forges; Forgejo is the fork of Gitea that keeps its API) in the Webship Workspace — a site from the product's own image on the project's own PostgreSQL, in containers (DDEV by default, Docker Compose with --runtime docker), by `cmd-gitea-project.sh` (`--product gitea|forgejo`), with the workspace account as an administrator, the default accounts and their access to the private repository owner/webship-site, and optional sample content (issues, a milestone, a comment); the forge's own commands, the sample content, a clean-up after a stopped test run, the default accounts and the dashboard's connection through `cmd-tools-gitea-cli.sh`; removal, always in containers. Invoke for "build a Gitea site", "build a Forgejo site", "add the sample repository", "add the default accounts to this site", "connect the dashboard to this forge", "tidy the site after a test run".
+description: Use this agent to build, maintain or remove a Gitea or Forgejo site (the open-source self-hosted Git forges; Forgejo is the fork of Gitea that keeps its API) in the Webship Workspace — a site from the product's own image on the project's own PostgreSQL, in containers (DDEV by default; Docker Compose, Podman or Kubernetes with --runtime), by `cmd-gitea-project.sh` (`--product gitea|forgejo`), with the workspace account as an administrator, the default accounts and their access to the private repository owner/webship-site, and optional sample content (issues, a milestone, a comment); the forge's own commands, the sample content, a clean-up after a stopped test run, the default accounts and the dashboard's connection through `cmd-tools-gitea-cli.sh`; removal, always in containers. Invoke for "build a Gitea site", "build a Forgejo site", "add the sample repository", "add the default accounts to this site", "connect the dashboard to this forge", "tidy the site after a test run".
 model: fable
 tools:
   - Bash
@@ -30,16 +30,18 @@ cd ~/workspace/sandboxes                      # or dev, test, demos
 bash cmd-gitea-project.sh mysite --install --add-users                                    # Gitea, with its accounts
 bash cmd-gitea-project.sh mysite --install --add-users --sample-content                   # with the sample repository
 bash cmd-gitea-project.sh myfj --product forgejo --install --add-users --sample-content   # Forgejo
-bash cmd-gitea-project.sh mysite --install --add-users --runtime docker                   # on Docker Compose
+bash cmd-gitea-project.sh mysite --install --add-users --runtime docker                   # or podman, kubernetes
 bash cmd-gitea-project.sh myold --install --release 1.27.3
 ```
 
 The site is the product's own image (`gitea/gitea`, or `codeberg.org/forgejo/forgejo`) on the project's own PostgreSQL
 17. On DDEV the image is a service of a generic project and takes the project's address, `https://mysite.ddev.site`;
 the project's web container keeps the mail catcher at `https://mysite.ddev.site:8026`. On Docker Compose
-(`--runtime docker`) the image is the web container's and runs as your user, its repositories in the project's
-`gitea/data`, at `http://127.0.0.1:<port>`; the build says the address. Other runtimes are not proven for these forges
-yet: the builder says so and stops before it changes anything. A build takes a minute or two (the image is about
+and Podman (`--runtime docker`, `--runtime podman`) the image is the web container's and runs as your user, its
+repositories in the project's `gitea/data`, at `http://127.0.0.1:<port>`; on Kubernetes (`--runtime kubernetes`, the
+workspace's kind cluster) the same image is the web pod's, at the node's address and a NodePort. The build says the
+address. Lando and Docksal are not proven for these forges yet: the builder says so and stops before it changes
+anything. A build takes a minute or two (the image is about
 200 MB the first time); check the free memory and disk first (`free -g`, `df -h /`) and build one site at a time.
 
 | Flag | What it does |
@@ -49,7 +51,7 @@ yet: the builder says so and stops before it changes anything. A build takes a m
 | `--add-users` | With `--install`: the default accounts, and their access to the private repository owner/webship-site |
 | `--sample-content` | With `--install --add-users`: `greeting.sh`, three issues (one opened by the reader, from outside), the milestone "Sprint 1", the label bug and a comment |
 | `--release <x.y.z>` | The release of the image: 1.27.3 for Gitea, 17.0.2 for Forgejo by default |
-| `--runtime ddev` or `--runtime docker` | The container runtime: DDEV (the default) or Docker Compose |
+| `--runtime ddev`, `docker`, `podman` or `kubernetes` | The container runtime: DDEV (the default), Docker Compose, Podman or Kubernetes |
 | `--launch` | Open the site when it is ready |
 
 A project of the same name is deleted first, with its database and its repositories. Every build makes the site's own

@@ -6,8 +6,8 @@ covers both: Forgejo is the fork of Gitea that keeps its API, so the same builde
 the menu and messages carry the name of the one you use. The plugin brings:
 
 - **a builder**, `cmd-gitea-project.sh`: a real Gitea, or a Forgejo with `--product forgejo`, from the product's own
-  image on the project's own PostgreSQL, on DDEV (the default) or on Docker Compose, with its default accounts, a
-  private sample repository and its issues and milestone;
+  image on the project's own PostgreSQL, on DDEV (the default), Docker Compose, Podman or Kubernetes, with its default
+  accounts, a private sample repository and its issues and milestone;
 - **a tool**, `cmd-tools-gitea-cli.sh`: what a site is and its accounts, the forge's own commands in its container,
   the default accounts, the sample content, a clean-up after a stopped test run, and the dashboard's connection;
 - **the forge**, for a project whose git remote is on your own Gitea or Forgejo
@@ -35,7 +35,8 @@ bash core/scripts/plugins.sh --configure gitea
 
 - A sites folder: one of the `dev`, `test`, `sandboxes` or `demos` plugins. The commands are placed there.
 - The AI folders `ai-agents`, `ai-skills`, `ai-commands` and `ai-prompts`, where its AI items land.
-- A container runtime: DDEV, or Docker with the workspace's container runtimes (`--runtime docker`).
+- A container runtime: DDEV, or Docker, Podman or a kind cluster with the workspace's container runtimes
+  (`--runtime docker`, `podman`, `kubernetes`).
 - About 200 MB of disk for an image the first time, and about 200 MB of memory for a running site.
 
 ## Build a site
@@ -44,7 +45,7 @@ bash core/scripts/plugins.sh --configure gitea
 cd ~/workspace/sandboxes                      # or dev, test, demos
 bash cmd-gitea-project.sh mysite --install --add-users --sample-content                     # Gitea
 bash cmd-gitea-project.sh myforge --product forgejo --install --add-users --sample-content  # Forgejo
-bash cmd-gitea-project.sh mysite --install --add-users --runtime docker                     # on Docker Compose
+bash cmd-gitea-project.sh mysite --install --add-users --runtime docker                     # or podman, kubernetes
 ```
 
 | Flag | What it does |
@@ -54,7 +55,7 @@ bash cmd-gitea-project.sh mysite --install --add-users --runtime docker         
 | `--add-users` | With `--install`: the default accounts, and their access to the private repository owner/webship-site |
 | `--sample-content` | With `--install --add-users`: `greeting.sh`, three issues, the milestone "Sprint 1", the label bug and a comment |
 | `--release <x.y.z>` | The release of the image: 1.27.3 for Gitea, 17.0.2 for Forgejo by default |
-| `--runtime ddev` or `--runtime docker` | DDEV (the default, or `container.runtime` of `settings.yml`) or Docker Compose |
+| `--runtime ddev`, `docker`, `podman` or `kubernetes` | DDEV (the default, or `container.runtime` of `settings.yml`), Docker Compose, Podman or Kubernetes (a kind cluster) |
 | `--launch` | Open the site when it is ready |
 
 A project of the same name is deleted first, with its database and its repositories.
@@ -63,11 +64,15 @@ A project of the same name is deleted first, with its database and its repositor
   on the project's PostgreSQL 17, at `https://mysite.ddev.site`. Its own start writes its configuration the first time
   and runs the forge as its git user. The project's web container keeps the mail catcher, at
   `https://mysite.ddev.site:8026`.
-- **On Docker Compose** the product's image is the web container's (the workspace's generic stack), on the project's
-  PostgreSQL 17, at `http://127.0.0.1:<port>`; the build says the address. The forge runs as your user, its
-  repositories and data in the project's `gitea/data`.
-- Podman, Kubernetes, Lando and Docksal are not proven for these forges yet: asked for one, the builder says so and
-  changes nothing.
+- **On Docker Compose and Podman** the product's image is the web container's (the workspace's generic stack), on the
+  project's PostgreSQL 17, at `http://127.0.0.1:<port>`; the build says the address. The forge runs as your user, its
+  repositories and data in the project's `gitea/data`. The image is named with its registry
+  (`docker.io/gitea/gitea`), as Podman resolves no short name without asking.
+- **On Kubernetes** (the workspace's kind cluster) the same image is the web pod's, the project's folder mounted from
+  this machine, at the node's address and a NodePort (`http://<node>:<port>`). The forge waits for its PostgreSQL
+  before it starts, as on the other runtimes. Its address is written into the site when it is built: build it again if
+  the cluster's address changes.
+- Lando and Docksal are not proven for these forges yet: asked for one, the builder says so and changes nothing.
 
 Every build makes the site's own administrator, `forge-admin`, with a password the forge makes. It and the site's other
 values (its secret key, its internal token) are kept in `gitea/env` of the project, which only you can read. The builder
