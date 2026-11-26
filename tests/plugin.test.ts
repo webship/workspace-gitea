@@ -81,6 +81,11 @@ test('the runtimes: DDEV, Docker Compose, Podman and Kubernetes; another is refu
   assert.match(env, /\[ "\$\{product\}" = 'forgejo' \] && prefix='FORGEJO'/, 'Forgejo reads FORGEJO__ values, Gitea GITEA__');
   assert.match(FUN, /forgejo\) echo "codeberg\.org\/forgejo\/forgejo:\$2" ;;/);
   assert.match(FUN, /\*\) echo "docker\.io\/gitea\/gitea:\$2" ;;/, 'with its registry: Podman resolves no short name without asking');
+  // The tool starts a project of another runtime only when the forge does not answer: on Podman a start makes every
+  // container of the project again (webship/workspace#906).
+  const tool = FUN.slice(FUN.indexOf('function gitea_cli_tool()'));
+  assert.match(tool, /\[ "\$\(gitea_probe\)" = '200' \] \|\| ddev start < \/dev\/null > \/dev\/null 2>&1 \|\| ddev start -y/, 'a forge that answers is left as it is');
+  assert.match(tool, /ddev describe -j 2>\/dev\/null \| grep -q '"status":"running"' \|\| ddev start -y/, 'DDEV keeps its own check');
   const serve = read('scripts/gitea-serve.sh');
   assert.match(serve, /RUN_USER = \$\(id -un\)/, 'on Docker Compose the forge runs as the host user');
   assert.match(serve, /exec gitea web --config "\$\{ini\}"/);

@@ -110,6 +110,9 @@ bash cmd-tools-gitea-cli.sh mysite --cancel-users               # keep them from
 bash cmd-tools-gitea-cli.sh mysite --connect member             # the dashboard reads this site as member
 ```
 
+The tool starts a site that is stopped, and leaves one that answers as it is: on Podman a start makes every container
+of the project again (webship/workspace#906).
+
 `--connect <login>` makes a new access token of the account with the forge's own admin command (scopes write:issue,
 write:repository, read:user) and writes it, with the site's address, the account and the product, into
 `core/config/plugin.gitea.settings.yml`, and the sample repository as the tracker's default one when none was set.
