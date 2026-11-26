@@ -638,10 +638,16 @@ PYEOF
   fi
 
   # The scenarios log in as the default accounts and read the sample repository: make sure the site has them, once it
-  # answers again (installing the testing stack may restart the project, and the forge with it).
-  if ( cd "${project_path}" && gitea_wait > /dev/null 2>&1 && add_gitea_users > /dev/null 2>&1 && gitea_site content < /dev/null > /dev/null 2>&1 ) ; then
-    echo "  the default accounts and the sample content are on the site (${users[*]})" ;
+  # answers again (installing the testing stack may restart the project, and the forge with it). Each part runs in the
+  # project and says when it did not work: add_gitea_users ends in the sites folder, so the sample content is asked for
+  # in the project again (webship/workspace-gitea#11).
+  if ! ( cd "${project_path}" && gitea_wait > /dev/null 2>&1 ) ; then
+    echo "  The forge does not answer: is the site running (ddev start in ${project_path})? The default accounts and the sample content were not checked." ;
+  elif ! ( cd "${project_path}" && add_gitea_users > /dev/null 2>&1 ) ; then
+    echo "  The default accounts could not be written (bash cmd-tools-gitea-cli.sh <site> --add-users says why)." ;
+  elif ! ( cd "${project_path}" && gitea_site content < /dev/null > /dev/null 2>&1 ) ; then
+    echo "  The sample content could not be written (bash cmd-tools-gitea-cli.sh <site> --sample-content says why)." ;
   else
-    echo "  The default accounts could not be written: is the site running (ddev start in ${project_path})?" ;
+    echo "  the default accounts and the sample content are on the site (${users[*]})" ;
   fi
 }
