@@ -487,7 +487,9 @@ function gitea_cli_tool() {
   if [ "$(gitea_runtime)" = 'ddev' ] ; then
     ddev describe -j 2>/dev/null | grep -q '"status":"running"' || ddev start -y < /dev/null || exit 1 ;
   else
-    ddev start < /dev/null > /dev/null 2>&1 || ddev start -y < /dev/null || exit 1 ;
+    # A forge that answers is left as it is: on Podman a start makes every container of the project again
+    # (webship/workspace#906).
+    [ "$(gitea_probe)" = '200' ] || ddev start < /dev/null > /dev/null 2>&1 || ddev start -y < /dev/null || exit 1 ;
   fi
   gitea_wait > /dev/null || { echo "The forge of ${PROJECT_NAME} does not answer; start it again (ddev restart in ${doc_name}/${PROJECT_NAME})." ; exit 1 ; } ;
 
